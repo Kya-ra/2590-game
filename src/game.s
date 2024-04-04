@@ -19,7 +19,7 @@
   .section .text
 
 Main:
-  PUSH  {R4-R5,LR}
+  PUSH  {R4-R12,LR}
 
 
   @
@@ -38,8 +38,31 @@ Main:
   @   (by BIClearing then ORRing)
   LDR     R4, =GPIOE_MODER
   LDR     R5, [R4]                    @ Read ...
+
   BIC     R5, #(0b11<<(LD3_PIN*2))    @ Modify ...
   ORR     R5, #(0b01<<(LD3_PIN*2))    @ write 01 to bits 
+
+  BIC     R5, #(0b11<<(LD4_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD4_PIN*2))    @ write 01 to bits 
+  
+  BIC     R5, #(0b11<<(LD5_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD5_PIN*2))    @ write 01 to bits 
+
+  BIC     R5, #(0b11<<(LD6_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD6_PIN*2))    @ write 01 to bits 
+
+  BIC     R5, #(0b11<<(LD7_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD7_PIN*2))    @ write 01 to bits 
+
+  BIC     R5, #(0b11<<(LD8_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD8_PIN*2))    @ write 01 to bits 
+  
+  BIC     R5, #(0b11<<(LD9_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD9_PIN*2))    @ write 01 to bits 
+
+  BIC     R5, #(0b11<<(LD10_PIN*2))    @ Modify ...
+  ORR     R5, #(0b01<<(LD10_PIN*2))    @ write 01 to bits 
+
   STR     R5, [R4]                    @ Write 
 
   @ Initialise the first countdown
@@ -114,7 +137,7 @@ Idle_Loop:
   B     Idle_Loop
   
 End_Main:
-  POP   {R4-R5,PC}
+  POP   {R4-R12,PC}
 
 
 
@@ -124,7 +147,7 @@ End_Main:
   .type  SysTick_Handler, %function
 SysTick_Handler:
 
-  PUSH  {R4, R5, LR}
+  PUSH  {R4-R12, LR}
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -138,6 +161,7 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
+  
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
   EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
@@ -154,7 +178,7 @@ SysTick_Handler:
   STR     R5, [R4]                  @
 
   @ Return from interrupt handler
-  POP  {R4, R5, PC}
+  POP  {R4-R12, PC}
 
 
 
