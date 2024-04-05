@@ -14,13 +14,12 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 250
+  .equ    BLINK_PERIOD, 50
 
   .section .text
 
 Main:
   PUSH  {R4-R12,LR}
-
 
   @
   @ Prepare GPIO Port E Pin 9 for output (LED LD3)
@@ -148,6 +147,8 @@ End_Main:
 SysTick_Handler:
 
   PUSH  {R4-R12, LR}
+  
+  MOV R3, #0x100
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -161,15 +162,30 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
-  
+  LDR     R6, =led_position
+  LDR     R3, [R6]
+  LDR     R7, =led_state
+  LDR     R8, [R7]
+
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
-  EOR     R5, #(0b1<<(LD3_PIN))     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  EOR     R5, R3     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                  @ 
 
   LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
   LDR     R5, =BLINK_PERIOD         @
   STR     R5, [R4]                  @
+
+  CMP R8, #0
+  BEQ .LnoReset
+  LSL R3, R3, #1
+  CMP R3, #0x20000
+  BLT .LnoReset
+  MOV R3, #0x100
+  .LnoReset:
+  RSB R8, R8, #1
+  STR R8, [R7]
+  STR R3, [R6]
 
 .LendIfDelay:                       @ }
 
@@ -211,5 +227,11 @@ button_count:
 
 blink_countdown:
   .space  4
+
+led_position:
+  .word 0x00080
+
+led_state:
+  .word 0x0
 
   .end
