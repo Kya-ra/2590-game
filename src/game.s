@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 50
+  .equ    BLINK_PERIOD, 150
 
   .section .text
 
@@ -169,13 +169,17 @@ SysTick_Handler:
 
   LDR     R4, =GPIOE_ODR            @   Invert LD3
   LDR     R5, [R4]                  @
-  EOR     R5, R3     @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
+  EOR     R5, R3                    @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                  @ 
 
   LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
   LDR     R5, =BLINK_PERIOD         @
   STR     R5, [R4]                  @
 
+  LDR R9, =game_active
+  LDR R9, [R9]
+  CMP R9, #0
+  BEQ .LendIfDelay
   CMP R8, #0
   BEQ .LnoReset
   LSL R3, R3, #1
@@ -205,7 +209,7 @@ SysTick_Handler:
   .type  EXTI0_IRQHandler, %function
 EXTI0_IRQHandler:
 
-  PUSH  {R4,R5,LR}
+  PUSH  {R4-R12,LR}
 
   LDR   R4, =button_count           @ count = count + 1
   LDR   R5, [R4]                    @
@@ -216,9 +220,24 @@ EXTI0_IRQHandler:
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
 
+  LDR R6, =led_position
+  LDR R7, [R6]
+  LDR R8, =win_led
+  LDR R8, [R8]
+  CMP R7, R8
+  BNE .Lfail
+  MOV R7, #0x800
+  STR R7, [R6]
+  B .Lexit
+  .Lfail:
+  MOV R7, #0x200
+  STR R7, [R6]
+  .Lexit:
+  MOV R9, #0
+  LDR R10, =game_active
+  STR R9, [R10]
   @ Return from interrupt handler
-  POP  {R4,R5,PC}
-
+  POP  {R4-R12,PC}
 
   .section .data
   
@@ -229,9 +248,15 @@ blink_countdown:
   .space  4
 
 led_position:
-  .word 0x00080
+  .word 0x80
 
 led_state:
   .word 0x0
+
+win_led:
+  .word 0x400
+
+game_active:
+  .word 0x1
 
   .end
