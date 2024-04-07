@@ -139,6 +139,46 @@ End_Main:
   POP   {R4-R12,PC}
 
 
+@ random subroutine
+@ Generates a random number between a range using Linear-feedback shift register
+@ 
+@ Sources:
+@   https://en.wikipedia.org/wiki/Linear-feedback_shift_register
+@   https://www.youtube.com/watch?v=Ks1pw1X22y4
+@
+@ Paramaters:
+@   R0: range - the range of numbers generated
+@   R1: seed address - the address the seed is currently at
+@
+@ Return:
+@   R0: random_number - the random number
+random:
+  PUSH    {R4,LR}
+  @ Load seed
+  MOV     R4, R1
+  LDRH    R1, [R4]
+  @ Compute the taps
+  AND     R2, R1, 0b1
+  AND     R3, R1, 0b100
+  LSR     R3, #2
+  EOR     R2, R2, R3
+  AND     R3, R1, 0b1000
+  LSR     R3, #3
+  EOR     R2, R2, R3
+  AND     R3, R1, 0b100000
+  LSR     R3, #5
+  EOR     R2, R2, R3
+  @ add the new number to the end of the seed
+  LSL     R2, R2, #15
+  LSR     R1, #1
+  ORR     R1, R1, R2
+  @ Save seed
+  STRH    R1, [R4]
+  UDIV    R2, R1, R0
+  MUL     R3, R0, R2
+  SUB     R0, R1, R3
+  POP     {R4,PC}
+
 
 @
 @ SysTick interrupt handler (blink LED LD3)
@@ -258,5 +298,8 @@ win_led:
 
 game_active:
   .word 0x1
+
+random_seed:
+  .hword 0xCA69
 
   .end
