@@ -154,25 +154,30 @@ End_Main:
 random:
   PUSH    {R4,LR}
   @ Load seed
-  MOV     R4, =random_seed
-  LDRH    R1, [R4]
-  @ Compute the taps
-  AND     R2, R1, 0b1
-  AND     R3, R1, 0b100
-  LSR     R3, #2
+  LDR     R4, =random_seed
+  LDR     R1, [R4]
+  @ Compute the taps          tap number:
+  @ tap 31:
+  AND     R2, R1, 0x2
+  LSR     R2, #1  @ 1 bit
+  @ tap 6:
+  AND     R3, R1, 0x2000000
+  LSR     R3, #25 @ 25 bits
   EOR     R2, R2, R3
-  AND     R3, R1, 0b1000
-  LSR     R3, #3
+  @ tap 5:
+  AND     R3, R1, 0x4000000
+  LSR     R3, #26 @ 26 bits
   EOR     R2, R2, R3
-  AND     R3, R1, 0b100000
-  LSR     R3, #5
+  @ tap 1:
+  AND     R3, R1, 0x40000000
+  LSR     R3, #30 @ 30 bits
   EOR     R2, R2, R3
   @ add the new number to the end of the seed
   LSL     R2, R2, #15
   LSR     R1, #1
   ORR     R1, R1, R2
   @ Save seed
-  STRH    R1, [R4]
+  STR     R1, [R4]
   UDIV    R2, R1, R0
   MUL     R3, R0, R2
   SUB     R0, R1, R3
@@ -299,6 +304,6 @@ game_active:
   .word 0x1
 
 random_seed:
-  .hword 0xCA69
+  .word 0xca660da9
 
   .end
