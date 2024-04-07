@@ -152,10 +152,33 @@ End_Main:
 @ Return:
 @   R0: random_number - the random number
 random:
-  PUSH    {R4,LR}
+  PUSH    {R4-R7,LR}
+  @ Save range-1
+  SUB     R7, R0, #1
+  @ Get amount of bits
+  CMP     R0, #0
+  BGT     .LgreaterThanZero
+  MOV     R0, #0
+  B       .LendRandom
+.LgreaterThanZero:
+  MOV     R5, #1
+  MOV     R1, 0b1
+.LbitGetterLoop:
+  CMP     R7, R1
+  BLS     .LendBitGetterLoop     
+  LSL     R1, #1
+  ORR     R1, #1
+  ADD     R5, #1
+  B       .LbitGetterLoop
+.LendBitGetterLoop:
   @ Load seed
   LDR     R4, =random_seed
   LDR     R1, [R4]
+  MOV     R6, #0
+  MOV     R0, #0
+.LprnBitLoop:
+  CMP     R6, R5
+  BEQ     .LcheckIfBelow
   @ Compute the taps          tap number:
   @ tap 31:
   AND     R2, R1, 0x2
@@ -173,15 +196,26 @@ random:
   LSR     R3, #30 @ 30 bits
   EOR     R2, R2, R3
   @ add the new number to the end of the seed
-  LSL     R2, R2, #15
+  LSL     R2, R2, #31
   LSR     R1, #1
   ORR     R1, R1, R2
+  @ add to the output number
+  LSL     R0, #1
+  AND     R3, R1, 0b1
+  ORR     R0, R3
+  ADD     R6, #1
+  B       .LprnBitLoop
+.LcheckIfBelow:
+  CMP     R0, R7
+  BLS     .LendRandomAndSave
+  MOV     R6, #0
+  MOV     R0, #0
+  B       .LprnBitLoop
+.LendRandomAndSave:
   @ Save seed
   STR     R1, [R4]
-  UDIV    R2, R1, R0
-  MUL     R3, R0, R2
-  SUB     R0, R1, R3
-  POP     {R4,PC}
+.LendRandom:
+  POP     {R4-R7,PC}
 
 
 @
