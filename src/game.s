@@ -148,7 +148,7 @@ End_Main:
 @
 @ Paramaters:
 @   R0: range - the range of numbers generated
-@   R1: seed address - the address the seed is currently at
+@   R1: seed address - the address the seed is currently at the seed itself should be 16 bits
 @
 @ Return:
 @   R0: random_number - the random number
