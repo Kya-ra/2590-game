@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 150
+  .equ    BLINK_PERIOD, 100
 
   .section .text
 
@@ -273,7 +273,7 @@ SysTick_Handler:
   LDR R9, =game_active
   LDR R9, [R9]
   CMP R9, #0
-  BEQ .LendIfDelay
+  BEQ .LstartCountdown
   CMP R8, #0
   BEQ .LnoReset
 
@@ -294,10 +294,21 @@ SysTick_Handler:
   BGE .LnoReset
   MOV R3, #0x8000
 
-  .LnoReset:
+.LnoReset:
   RSB R8, R8, #1
   STR R8, [R7]
   STR R3, [R6]
+  B .LendIfDelay
+
+.LstartCountdown:
+  LDR R8, =game_start_count
+  LDR R9, [R8]
+  SUB R9, R9, #1
+  STR R9, [R8]
+  CMP R9, #1
+  BNE .LendIfDelay
+  LDR R8, =game_active
+  STR R9, [R8]
 
 .LendIfDelay:                       @ }
 
@@ -305,10 +316,9 @@ SysTick_Handler:
   LDR     R5, =SCB_ICSR_PENDSTCLR   @
   STR     R5, [R4]                  @
 
+
   @ Return from interrupt handler
   POP  {R4-R12, PC}
-
-
 
 @
 @ External interrupt line 0 interrupt handler
@@ -365,10 +375,14 @@ win_led:
   .space 4
 
 game_active:
-  .word 0x1
+  .word 0x0
 
 play_direction:
   .space 4
+
+game_start_count:
+  .word 0xd
+  @this number must be odd
 
 random_seed:
   .word 0xca660da9
