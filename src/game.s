@@ -133,11 +133,18 @@ Main:
   @initalize win_led
   MOV R0, #8
   BL random
+  @correct to 8-15 range reqd
   ADD R0, #8
   MOV R1, #1
   LSL R1, R0
   LDR R2, =win_led
   STR R1, [R2]
+
+  @initialize play_direction
+  MOV R0, #2
+  BL random
+  LDR R1, =play_direction
+  STR R0, [R1]
 
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
@@ -267,10 +274,25 @@ SysTick_Handler:
   BEQ .LendIfDelay
   CMP R8, #0
   BEQ .LnoReset
+
+  LDR R9, =play_direction
+  LDR R9, [R9]
+  CMP R9, #1
+  BEQ .LreversedGame
+
   LSL R3, R3, #1
   CMP R3, #0x20000
   BLT .LnoReset
   MOV R3, #0x100
+  B .LnoReset
+  
+.LreversedGame:
+  LSR R3, R3, #1
+  CMP R3, #0x100
+  BLT .LnoReset
+  MOV R3, #0x20000
+  B .LnoReset
+
   .LnoReset:
   RSB R8, R8, #1
   STR R8, [R7]
@@ -339,10 +361,13 @@ led_state:
   .word 0x0
 
 win_led:
-  .space 4
+  .space 1
 
 game_active:
   .word 0x0
+
+play_direction:
+  .space 1
 
 random_seed:
   .word 0xca660da9
