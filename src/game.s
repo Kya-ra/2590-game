@@ -139,6 +139,84 @@ End_Main:
   POP   {R4-R12,PC}
 
 
+@ random subroutine
+@ Generates a random number between a range using Linear-feedback shift register
+@ 
+@ Sources:
+@   https://en.wikipedia.org/wiki/Linear-feedback_shift_register
+@   https://www.youtube.com/watch?v=Ks1pw1X22y4
+@
+@ Paramaters:
+@   R0: range - the range of numbers generated
+@
+@ Return:
+@   R0: random_number - the random number
+random:
+  PUSH    {R4-R7,LR}
+  @ Save range-1
+  SUB     R7, R0, #1
+  @ Get amount of bits
+  CMP     R0, #0
+  BGT     .LgreaterThanZero
+  MOV     R0, #0
+  B       .LendRandom
+.LgreaterThanZero:
+  MOV     R5, #1
+  MOV     R1, 0b1
+.LbitGetterLoop:
+  CMP     R7, R1
+  BLS     .LendBitGetterLoop     
+  LSL     R1, #1
+  ORR     R1, #1
+  ADD     R5, #1
+  B       .LbitGetterLoop
+.LendBitGetterLoop:
+  @ Load seed
+  LDR     R4, =random_seed
+  LDR     R1, [R4]
+  MOV     R6, #0
+  MOV     R0, #0
+.LprnBitLoop:
+  CMP     R6, R5
+  BEQ     .LcheckIfBelow
+  @ Compute the taps          tap number:
+  @ tap 31:
+  AND     R2, R1, 0x2
+  LSR     R2, #1  @ 1 bit
+  @ tap 6:
+  AND     R3, R1, 0x2000000
+  LSR     R3, #25 @ 25 bits
+  EOR     R2, R2, R3
+  @ tap 5:
+  AND     R3, R1, 0x4000000
+  LSR     R3, #26 @ 26 bits
+  EOR     R2, R2, R3
+  @ tap 1:
+  AND     R3, R1, 0x40000000
+  LSR     R3, #30 @ 30 bits
+  EOR     R2, R2, R3
+  @ add the new number to the end of the seed
+  LSL     R2, R2, #31
+  LSR     R1, #1
+  ORR     R1, R1, R2
+  @ add to the output number
+  LSL     R0, #1
+  AND     R3, R1, 0b1
+  ORR     R0, R3
+  ADD     R6, #1
+  B       .LprnBitLoop
+.LcheckIfBelow:
+  CMP     R0, R7
+  BLS     .LendRandomAndSave
+  MOV     R6, #0
+  MOV     R0, #0
+  B       .LprnBitLoop
+.LendRandomAndSave:
+  @ Save seed
+  STR     R1, [R4]
+.LendRandom:
+  POP     {R4-R7,PC}
+
 
 @
 @ SysTick interrupt handler (blink LED LD3)
@@ -258,5 +336,8 @@ win_led:
 
 game_active:
   .word 0x1
+
+random_seed:
+  .word 0xca660da9
 
   .end
