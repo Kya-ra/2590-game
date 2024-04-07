@@ -139,6 +139,8 @@ Main:
   LSL R1, R0
   LDR R2, =win_led
   STR R1, [R2]
+  LDR R2, =led_position
+  STR R1, [R2]
 
   @initialize play_direction
   MOV R0, #2
@@ -277,21 +279,20 @@ SysTick_Handler:
 
   LDR R9, =play_direction
   LDR R9, [R9]
-  CMP R9, #1
+  CMP R9, #0
   BEQ .LreversedGame
 
   LSL R3, R3, #1
-  CMP R3, #0x20000
-  BLT .LnoReset
+  CMP R3, #0x8000
+  BLE .LnoReset
   MOV R3, #0x100
   B .LnoReset
   
 .LreversedGame:
   LSR R3, R3, #1
   CMP R3, #0x100
-  BLT .LnoReset
-  MOV R3, #0x20000
-  B .LnoReset
+  BGE .LnoReset
+  MOV R3, #0x8000
 
   .LnoReset:
   RSB R8, R8, #1
@@ -355,19 +356,19 @@ blink_countdown:
   .space  4
 
 led_position:
-  .word 0x100
+  .space 4
 
 led_state:
   .word 0x0
 
 win_led:
-  .space 1
+  .space 4
 
 game_active:
-  .word 0x0
+  .word 0x1
 
 play_direction:
-  .space 1
+  .space 4
 
 random_seed:
   .word 0xca660da9
