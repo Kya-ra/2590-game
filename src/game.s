@@ -148,14 +148,13 @@ End_Main:
 @
 @ Paramaters:
 @   R0: range - the range of numbers generated
-@   R1: seed address - the address the seed is currently at the seed itself should be 16 bits
 @
 @ Return:
 @   R0: random_number - the random number
 random:
   PUSH    {R4,LR}
   @ Load seed
-  MOV     R4, R1
+  MOV     R4, =random_seed
   LDRH    R1, [R4]
   @ Compute the taps
   AND     R2, R1, 0b1
