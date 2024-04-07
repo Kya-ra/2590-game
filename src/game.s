@@ -130,6 +130,15 @@ Main:
   MOV     R5, #(1<<6)
   STR     R5, [R4]
 
+  @initalize win_led
+  MOV R0, #8
+  BL random
+  ADD R0, #8
+  MOV R1, #1
+  LSL R1, R0
+  LDR R2, =win_led
+  STR R1, [R2]
+
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
 Idle_Loop:
@@ -225,8 +234,6 @@ random:
 SysTick_Handler:
 
   PUSH  {R4-R12, LR}
-  
-  MOV R3, #0x100
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -326,16 +333,16 @@ blink_countdown:
   .space  4
 
 led_position:
-  .word 0x80
+  .word 0x100
 
 led_state:
   .word 0x0
 
 win_led:
-  .word 0x400
+  .space 4
 
 game_active:
-  .word 0x1
+  .word 0x0
 
 random_seed:
   .word 0xca660da9
