@@ -338,10 +338,6 @@ EXTI0_IRQHandler:
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
 
-  LDR R9, =game_active
-  LDR R9, [R9]
-  CMP R9, #0
-  BEQ .LstartGame
   LDR R6, =led_position
   LDR R7, [R6]
   LDR R8, =win_led
@@ -355,26 +351,11 @@ EXTI0_IRQHandler:
   MOV R7, #0x200
   STR R7, [R6]
   .Lexit:
-  RSB R9, R9, #1
+  MOV R9, #0
   LDR R10, =game_active
   STR R9, [R10]
   @ Return from interrupt handler
   POP  {R4-R12,PC}
-
-  .LstartGame:
-  MOV R0, #8
-  BL random
-  ADD R0, #8
-  MOV R1, #1
-  LSL R1, R0
-  LDR R2, =win_led
-  STR R1, [R2]
-  LDR R2, =led_position
-  STR R1, [R2]
-  B .Lexit
-
-
-
 
   .section .data
   
