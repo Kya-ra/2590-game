@@ -240,6 +240,11 @@ SysTick_Handler:
 
 .LelseFire:                         @ else {
 
+  LDR R9, =game_ready
+  LDR R9, [R9]
+  CMP R9, #1
+  BNE .LendIfDelay
+
   LDR     R6, =led_position
   LDR     R3, [R6]
   LDR     R7, =led_state
@@ -325,7 +330,7 @@ EXTI0_IRQHandler:
   LDR R9, =game_ready
   LDR R10, [R9]
   CMP R10, #0
-  BNE .LgenerateRandoms
+  BEQ .LgenerateRandoms
 
   LDR R6, =led_position
   LDR R7, [R6]
@@ -343,6 +348,7 @@ EXTI0_IRQHandler:
   MOV R9, #0
   LDR R10, =game_active
   STR R9, [R10]
+  B .LendSub
 
   .LgenerateRandoms:
   @initalize win_led
@@ -366,6 +372,7 @@ EXTI0_IRQHandler:
   MOV R10, #1
   LDR R9, =game_ready
   STR R10, [R9]
+  .LendSub:
 
   @ Return from interrupt handler
   POP  {R4-R12,PC}
