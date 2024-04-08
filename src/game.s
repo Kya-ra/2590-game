@@ -150,13 +150,15 @@ End_Main:
 @
 @ Paramaters:
 @   R0: range - the range of numbers generated
+@   R1: seed - the seed the prng uses
 @
 @ Return:
 @   R0: random_number - the random number
 random:
-  PUSH    {R4-R7,LR}
+  PUSH    {R4-R8,LR}
   @ Save range-1
   SUB     R7, R0, #1
+  MOV     R8, R1
   @ Get amount of bits
   CMP     R0, #0
   BGT     .LgreaterThanZero
@@ -174,8 +176,7 @@ random:
   B       .LbitGetterLoop
 .LendBitGetterLoop:
   @ Load seed
-  LDR     R4, =random_seed
-  LDR     R1, [R4]
+  MOV     R1, R8
   MOV     R6, #0
   MOV     R0, #0
 .LprnBitLoop:
@@ -209,15 +210,12 @@ random:
   B       .LprnBitLoop
 .LcheckIfBelow:
   CMP     R0, R7
-  BLS     .LendRandomAndSave
+  BLS     .LendRandom
   MOV     R6, #0
   MOV     R0, #0
   B       .LprnBitLoop
-.LendRandomAndSave:
-  @ Save seed
-  STR     R1, [R4]
 .LendRandom:
-  POP     {R4-R7,PC}
+  POP     {R4-R8,PC}
 
 
 @
@@ -227,6 +225,15 @@ random:
 SysTick_Handler:
 
   PUSH  {R4-R12, LR}
+
+  LDR   R4, =tick
+  LDR   R5, [R4]
+  CMP   R5, #0xffffffff
+  BNE   .LnotMax
+  LDR   R5, =0
+.LnotMax:
+  ADD   R5, #1
+  STR   R5, [R4]
 
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
@@ -259,45 +266,45 @@ SysTick_Handler:
   LDR     R5, =BLINK_PERIOD         @
   STR     R5, [R4]                  @
 
-  LDR R9, =game_active
-  LDR R9, [R9]
-  CMP R9, #0
-  BEQ .LstartCountdown
-  CMP R8, #0
-  BEQ .LnoReset
+  LDR     R9, =game_active
+  LDR     R9, [R9]
+  CMP     R9, #0
+  BEQ     .LstartCountdown
+  CMP     R8, #0
+  BEQ     .LnoReset
 
-  LDR R9, =play_direction
-  LDR R9, [R9]
-  CMP R9, #0
-  BEQ .LreversedGame
+  LDR     R9, =play_direction
+  LDR     R9, [R9]
+  CMP     R9, #0
+  BEQ     .LreversedGame
 
-  LSL R3, R3, #1
-  CMP R3, #0x8000
-  BLE .LnoReset
-  MOV R3, #0x100
-  B .LnoReset
+  LSL     R3, R3, #1
+  CMP     R3, #0x8000
+  BLE     .LnoReset
+  MOV     R3, #0x100
+  B       .LnoReset
   
 .LreversedGame:
-  LSR R3, R3, #1
-  CMP R3, #0x100
-  BGE .LnoReset
-  MOV R3, #0x8000
+  LSR     R3, R3, #1
+  CMP     R3, #0x100
+  BGE     .LnoReset
+  MOV     R3, #0x8000
 
 .LnoReset:
-  RSB R8, R8, #1
-  STR R8, [R7]
-  STR R3, [R6]
-  B .LendIfDelay
+  RSB     R8, R8, #1
+  STR     R8, [R7]
+  STR     R3, [R6]
+  B       .LendIfDelay
 
 .LstartCountdown:
-  LDR R8, =game_start_count
-  LDR R9, [R8]
-  SUB R9, R9, #1
-  STR R9, [R8]
-  CMP R9, #1
-  BNE .LendIfDelay
-  LDR R8, =game_active
-  STR R9, [R8]
+  LDR     R8, =game_start_count
+  LDR     R9, [R8]
+  SUB     R9, R9, #1
+  STR     R9, [R8]
+  CMP     R9, #1
+  BNE     .LendIfDelay
+  LDR     R8, =game_active
+  STR     R9, [R8]
 
 .LendIfDelay:                       @ }
 
@@ -307,7 +314,7 @@ SysTick_Handler:
 
 
   @ Return from interrupt handler
-  POP  {R4-R12, PC}
+  POP     {R4-R12, PC}
 
 @
 @ External interrupt line 0 interrupt handler
@@ -316,66 +323,71 @@ SysTick_Handler:
   .type  EXTI0_IRQHandler, %function
 EXTI0_IRQHandler:
 
-  PUSH  {R4-R12,LR}
+  PUSH    {R4-R12,LR}
 
-  LDR   R4, =button_count           @ count = count + 1
-  LDR   R5, [R4]                    @
-  ADD   R5, R5, #1                  @
-  STR   R5, [R4]                    @
+  LDR     R4, =button_count           @ count = count + 1
+  LDR     R5, [R4]                    @
+  ADD     R5, R5, #1                  @
+  STR     R5, [R4]                    @
 
-  LDR   R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
-  MOV   R5, #(1<<0)                 @
-  STR   R5, [R4]                    @
+  LDR     R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
+  MOV     R5, #(1<<0)                 @
+  STR     R5, [R4]                    @
   
-  LDR R9, =game_ready
-  LDR R10, [R9]
-  CMP R10, #0
-  BEQ .LgenerateRandoms
+  LDR     R9, =game_ready
+  LDR     R10, [R9]
+  CMP     R10, #0
+  BEQ     .LgenerateRandoms
 
-  LDR R6, =led_position
-  LDR R7, [R6]
-  LDR R8, =win_led
-  LDR R8, [R8]
-  CMP R7, R8
-  BNE .Lfail
-  MOV R7, #0x800
-  STR R7, [R6]
-  B .Lexit
-  .Lfail:
-  MOV R7, #0x200
-  STR R7, [R6]
-  .Lexit:
-  MOV R9, #0
-  LDR R10, =game_active
-  STR R9, [R10]
-  B .LendSub
+  LDR     R6, =led_position
+  LDR     R7, [R6]
+  LDR     R8, =win_led
+  LDR     R8, [R8]
+  CMP     R7, R8
+  BNE     .Lfail
+  MOV     R7, #0x800
+  STR     R7, [R6]
+  B       .Lexit
+.Lfail:
+  MOV     R7, #0x200
+  STR     R7, [R6]
+.Lexit:
+  MOV     R9, #0
+  LDR     R10, =game_active
+  STR     R9, [R10]
+  B     .LendSub
 
-  .LgenerateRandoms:
+.LgenerateRandoms:
   @initalize win_led
-  MOV R0, #8
-  BL random
+  MOV     R0, #8
+  LDR     R1, =tick
+  LDR     R1, [R1]
+  BL      random
   @correct to 8-15 range reqd
-  ADD R0, #8
-  MOV R1, #1
-  LSL R1, R0
-  LDR R2, =win_led
-  STR R1, [R2]
-  LDR R2, =led_position
-  STR R1, [R2]
+  ADD     R0, #8
+  MOV     R1, #1
+  LSL     R1, R0
+  LDR     R2, =win_led
+  STR     R1, [R2]
+  LDR     R2, =led_position
+  STR     R1, [R2]
 
   @initialize play_direction
-  MOV R0, #2
-  BL random
-  LDR R1, =play_direction
-  STR R0, [R1]
+  MOV     R0, #2
+  LDR     R1, =tick
+  LDR     R1, [R1]
+  BL      random
+  LDR     R1, =play_direction
+  STR     R0, [R1]
 
-  MOV R10, #1
-  LDR R9, =game_ready
-  STR R10, [R9]
-  .LendSub:
+  MOV     R10, #1
+  LDR     R9, =game_ready
+  STR     R10, [R9]
+.LendSub:
 
   @ Return from interrupt handler
-  POP  {R4-R12,PC}
+  POP     {R4-R12,PC}
+
 
   .section .data
   
@@ -407,7 +419,7 @@ game_start_count:
   .word 0xd
   @this number must be odd
 
-random_seed:
-  .word 0xca660da9
+tick:
+  .word 0
 
   .end
