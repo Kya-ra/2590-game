@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 100
+  .equ    BLINK_PERIOD, 50
 
   .section .text
 
@@ -130,23 +130,7 @@ Main:
   MOV     R5, #(1<<6)
   STR     R5, [R4]
 
-  @initalize win_led
-  MOV R0, #8
-  BL random
-  @correct to 8-15 range reqd
-  ADD R0, #8
-  MOV R1, #1
-  LSL R1, R0
-  LDR R2, =win_led
-  STR R1, [R2]
-  LDR R2, =led_position
-  STR R1, [R2]
-
-  @initialize play_direction
-  MOV R0, #2
-  BL random
-  LDR R1, =play_direction
-  STR R0, [R1]
+  
 
   @ Nothing else to do in Main
   @ Idle loop forever (welcome to interrupts!!)
@@ -337,6 +321,11 @@ EXTI0_IRQHandler:
   LDR   R4, =EXTI_PR                @ Clear (acknowledge) the interrupt
   MOV   R5, #(1<<0)                 @
   STR   R5, [R4]                    @
+  
+  LDR R9, =game_ready
+  LDR R10, [R9]
+  CMP R10, #0
+  BNE .LgenerateRandoms
 
   LDR R6, =led_position
   LDR R7, [R6]
@@ -354,6 +343,30 @@ EXTI0_IRQHandler:
   MOV R9, #0
   LDR R10, =game_active
   STR R9, [R10]
+
+  .LgenerateRandoms:
+  @initalize win_led
+  MOV R0, #8
+  BL random
+  @correct to 8-15 range reqd
+  ADD R0, #8
+  MOV R1, #1
+  LSL R1, R0
+  LDR R2, =win_led
+  STR R1, [R2]
+  LDR R2, =led_position
+  STR R1, [R2]
+
+  @initialize play_direction
+  MOV R0, #2
+  BL random
+  LDR R1, =play_direction
+  STR R0, [R1]
+
+  MOV R10, #1
+  LDR R9, =game_ready
+  STR R10, [R9]
+
   @ Return from interrupt handler
   POP  {R4-R12,PC}
 
@@ -375,6 +388,9 @@ win_led:
   .space 4
 
 game_active:
+  .word 0x0
+
+game_ready:
   .word 0x0
 
 play_direction:
