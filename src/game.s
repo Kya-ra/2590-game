@@ -360,10 +360,10 @@ EXTI0_IRQHandler:
   .section .data
   
 button_count:
-  .space  4
+  .space 4
 
 blink_countdown:
-  .space  4
+  .space 4
 
 led_position:
   .space 4
