@@ -14,7 +14,7 @@
   @ Definitions are in definitions.s to keep this file "clean"
   .include "./src/definitions.s"
 
-  .equ    BLINK_PERIOD, 50
+  .equ    BLINK_PERIOD, 100
 
   .section .text
 
@@ -65,10 +65,15 @@ Main:
   STR     R5, [R4]                    @ Write 
 
   @ Initialise the first countdown
-
   LDR     R4, =blink_countdown
-  LDR     R5, =BLINK_PERIOD
+  LDR     R5, =blink_period
+  LDR     R5, [R5]
+  @ LDR     R5, =BLINK_PERIOD
   STR     R5, [R4]  
+
+  @ LDR     R4, =blink_countdown
+  @ LDR     R5, =blink_period
+  @ STR     R5, [R4]  
 
   @ Configure SysTick Timer to generate an interrupt every 1ms
 
@@ -235,8 +240,10 @@ SysTick_Handler:
   ADD   R5, #1
   STR   R5, [R4]
 
+
   LDR   R4, =blink_countdown        @ if (countdown != 0) {
   LDR   R5, [R4]                    @
+.LdontInit:
   CMP   R5, #0                      @
   BEQ   .LelseFire                  @
 
@@ -262,8 +269,9 @@ SysTick_Handler:
   EOR     R5, R3                    @   GPIOE_ODR = GPIOE_ODR ^ (1<<LD3_PIN);
   STR     R5, [R4]                  @ 
 
-  LDR     R4, =blink_countdown      @   countdown = BLINK_PERIOD;
-  LDR     R5, =BLINK_PERIOD         @
+  LDR     R4, =blink_countdown      @   countdown = blink_period;
+  LDR     R5, =blink_period         @
+  LDR     R5, [R5]
   STR     R5, [R4]                  @
 
   LDR     R9, =game_active
@@ -358,6 +366,14 @@ EXTI0_IRQHandler:
   B     .LendSub
 
 .LgenerateRandoms:
+  @initalize count
+  MOV   R0, #50
+  LDR   R2, =tick
+  LDR   R1, [R2]
+  BL    random
+  ADD   R0, R0, #20
+  LDR   R1, =blink_period
+  STR   R0, [R1]
   @initalize win_led
   MOV     R0, #8
   LDR     R1, =tick
@@ -418,6 +434,9 @@ play_direction:
 game_start_count:
   .word 0xd
   @this number must be odd
+blink_period:
+  .word 100
+  @ .equ    BLINK_PERIOD, 100
 
 tick:
   .word 0

@@ -2,5 +2,5 @@
     "cortex-debug.armToolchainPath": "${config:tcd-csu1102x-helper.armToolchainPath}",
     "cortex-debug.openocdPath": "${config:tcd-csu1102x-helper.openocdPath}",
     "cortex-debug.gdbPath": "${config:tcd-csu1102x-helper.gdbPath}",
-    "cortex-debug.variableUseNaturalFormat": false
+    "cortex-debug.variableUseNaturalFormat": true
 }
