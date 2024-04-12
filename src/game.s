@@ -59,8 +59,8 @@ Main:
   BIC     R5, #(0b11<<(LD9_PIN*2))    @ Clear LED 9 bits
   ORR     R5, #(0b01<<(LD9_PIN*2))    @ write 01 to bits to set active
 
-  BIC     R5, #(0b11<<(LD10_PIN*2))    @ Clear LED 10 bits
-  ORR     R5, #(0b01<<(LD10_PIN*2))    @ write 01 to bits to set active
+  BIC     R5, #(0b11<<(LD10_PIN*2))   @ Clear LED 10 bits
+  ORR     R5, #(0b01<<(LD10_PIN*2))   @ write 01 to bits to set active
 
   STR     R5, [R4]                    @ Write 
 
@@ -113,10 +113,10 @@ Main:
   @   kit) to use the EXTI0 external interrupt signal
   @ Determined by bits 3..0 of the External Interrrupt Control
   @   Register (EXTIICR)
-  LDR     R4, =SYSCFG_EXTIICR1 @ Load systen configuration to EXTIICR register
-  LDR     R5, [R4]            @ Load External Interrupt control
-  BIC     R5, R5, #0b1111     @ Clear bits 3..0 of External Interrupt control
-  STR     R5, [R4]            @ store new result in SYSCFG_EXTIICR1 
+  LDR     R4, =SYSCFG_EXTIICR1  @ Load systen configuration to EXTIICR register
+  LDR     R5, [R4]              @ Load External Interrupt control
+  BIC     R5, R5, #0b1111       @ Clear bits 3..0 of External Interrupt control
+  STR     R5, [R4]              @ store new result in SYSCFG_EXTIICR1 
 
   @ Enable (unmask) interrupts on external interrupt Line0
   LDR     R4, =EXTI_IMR
@@ -162,8 +162,8 @@ End_Main:
 random:
   PUSH    {R4-R8,LR}
   @ Save range-1
-  SUB     R7, R0, #1  @ tempRange = range - 1
-  MOV     R8, R1      @ tempSeed = seed
+  SUB     R7, R0, #1           @ tempRange = range - 1
+  MOV     R8, R1               @ tempSeed = seed
   @ Get amount of bits
   CMP     R0, #0               @ if range >= 0 {
   BGT     .LgreaterThanZero
@@ -231,14 +231,14 @@ SysTick_Handler:
 
   PUSH  {R4-R12, LR}
 
-  LDR   R4, =tick       @ tickAddress = tickAddresslocation
-  LDR   R5, [R4]        @ tickNum = tickAddress[0]
-  CMP   R5, #0xffffffff @ if tickNum ==  Max { tickNum = 0 }
-  BNE   .LnotMax        @ 
+  LDR   R4, =tick                   @ tickAddress = tickAddresslocation
+  LDR   R5, [R4]                    @ tickNum = tickAddress[0]
+  CMP   R5, #0xffffffff             @ if tickNum ==  Max { tickNum = 0 }
+  BNE   .LnotMax                    @ 
   LDR   R5, =0          
 .LnotMax:
-  ADD   R5, #1          @ tickNumm ++
-  STR   R5, [R4]        @ tickAddress = ticknum
+  ADD   R5, #1                      @ tickNumm ++
+  STR   R5, [R4]                    @ tickAddress = ticknum
 
 
   LDR   R4, =blink_countdown        @ 
@@ -323,11 +323,11 @@ SysTick_Handler:
   LDR     R8, =game_active        @ else {gameActive = game_active}
   STR     R9, [R8]                @
 
-.LendIfDelay:                       @ }
+.LendIfDelay:                     @ }
 
-  LDR     R4, =SCB_ICSR             @ Clear (acknowledge) the interrupt
-  LDR     R5, =SCB_ICSR_PENDSTCLR   @
-  STR     R5, [R4]                  @
+  LDR     R4, =SCB_ICSR           @ Clear (acknowledge) the interrupt
+  LDR     R5, =SCB_ICSR_PENDSTCLR @
+  STR     R5, [R4]                @
 
 
   @ Return from interrupt handler
